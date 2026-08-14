@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Simulador de Multa SPED - ECD / ECF</title>
 
     <!-- Chart.js para gráficos -->
@@ -13,6 +13,9 @@
     </script>
 
     <style>
+        /* ============================================================
+                   RESET E VARIÁVEIS
+                   ============================================================ */
         * {
             margin: 0;
             padding: 0;
@@ -33,16 +36,35 @@
             --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             --radius: 16px;
             --transition: 0.25s ease;
+            --font-size-base: 16px;
+        }
+
+        /* ============================================================
+                   ESTILOS BASE
+                   ============================================================ */
+        html {
+            font-size: var(--font-size-base);
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             background: #f0f4f8;
             color: #1a202c;
-            padding: 20px;
+            padding: 16px;
             transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+            min-height: 100dvh;
+            /* Altura dinâmica para mobile */
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
+        /* ============================================================
+                   DARK MODE
+                   ============================================================ */
         body.dark-mode {
             background: #1a202c;
             color: #e2e8f0;
@@ -107,56 +129,90 @@
             background: #4a5568;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+        body.dark-mode .chart-container {
+            background: #2d3748;
         }
 
-        /* HEADER */
+        /* ============================================================
+                   CONTAINER PRINCIPAL
+                   ============================================================ */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 8px;
+            width: 100%;
+        }
+
+        /* ============================================================
+                   HEADER RESPONSIVO
+                   ============================================================ */
         .header {
             background: linear-gradient(145deg, var(--primary), var(--primary-light));
             color: #fff;
-            padding: 30px 35px;
+            padding: 24px 28px;
             border-radius: var(--radius);
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             box-shadow: var(--shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 16px;
         }
 
-        .header h1 {
-            font-size: 2rem;
+        .header-left {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-left h1 {
+            font-size: clamp(1.3rem, 4vw, 2.2rem);
             font-weight: 700;
             letter-spacing: -0.5px;
+            line-height: 1.2;
         }
 
-        .header p {
+        .header-left p {
+            font-size: clamp(0.75rem, 1.5vw, 1rem);
             opacity: 0.85;
             margin-top: 4px;
         }
 
+        .badge-legal {
+            display: inline-block;
+            background: var(--warning);
+            color: #1a202c;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: clamp(0.6rem, 1vw, 0.75rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+
         .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn-icon {
             background: rgba(255, 255, 255, 0.15);
             color: #fff;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 10px 18px;
-            border-radius: 12px;
+            padding: 8px 14px;
+            border-radius: 10px;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 0.9rem;
+            font-size: clamp(0.7rem, 1.2vw, 0.9rem);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
+            touch-action: manipulation;
         }
 
         .btn-icon:hover {
@@ -164,461 +220,30 @@
             transform: translateY(-2px);
         }
 
-        .badge-legal {
-            display: inline-block;
-            background: var(--warning);
-            color: #1a202c;
-            padding: 4px 16px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 8px;
+        .btn-icon:active {
+            transform: scale(0.95);
         }
 
-        /* GRID */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 1024px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-            .grid-3 {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .grid-3 {
-                grid-template-columns: 1fr;
-            }
-            .header h1 {
-                font-size: 1.4rem;
-            }
-            .header {
-                padding: 20px;
-            }
-            .row-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* CARDS */
-        .card {
-            background: #ffffff;
-            border-radius: var(--radius);
-            padding: 25px 28px;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            border: 1px solid var(--gray-200);
-        }
-
-        .card:hover {
-            border-color: #b0c4de;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-        }
-
-        .card h2 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 18px;
+        /* ============================================================
+                   TOGGLE SWITCH (adaptado para mobile)
+                   ============================================================ */
+        .switch-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            border-bottom: 3px solid var(--gray-200);
-            padding-bottom: 12px;
+            gap: 6px;
         }
 
-        .card h2 .tag {
-            font-size: 0.6rem;
-            padding: 2px 12px;
-            border-radius: 30px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            color: #fff;
+        .switch-wrapper span {
+            font-size: clamp(0.6rem, 1vw, 0.75rem);
+            opacity: 0.8;
         }
 
-        .tag-ecd {
-            background: var(--secondary);
-        }
-        .tag-presumido {
-            background: var(--primary-light);
-        }
-        .tag-real {
-            background: var(--danger);
-        }
-        .tag-especial {
-            background: #d69e2e;
-        }
-
-        /* CAMPOS */
-        .campo {
-            margin-bottom: 14px;
-        }
-
-        .campo label {
-            display: block;
-            font-weight: 500;
-            font-size: 0.82rem;
-            color: var(--gray-800);
-            margin-bottom: 4px;
-        }
-
-        .campo .dica {
-            font-size: 0.7rem;
-            color: var(--gray-600);
-            font-weight: 400;
-        }
-
-        .campo input,
-        .campo select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid #d2dce8;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            background: var(--gray-50);
-            transition: var(--transition);
-            font-weight: 500;
-        }
-
-        .campo input:focus,
-        .campo select:focus {
-            border-color: var(--primary-light);
-            outline: none;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(26, 74, 111, 0.12);
-        }
-
-        .campo input[readonly] {
-            background: var(--gray-100);
-            color: var(--gray-800);
-            font-weight: 600;
-        }
-
-        .row-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .row-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-        }
-
-        @media (max-width: 480px) {
-            .row-2,
-            .row-3 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* BOTÕES */
-        .btn-calcular {
-            background: var(--primary-light);
-            color: #fff;
-            border: none;
-            padding: 13px 20px;
-            width: 100%;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 6px;
-            letter-spacing: 0.3px;
-        }
-
-        .btn-calcular:hover {
-            background: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(26, 74, 111, 0.25);
-        }
-
-        .btn-calcular-danger {
-            background: var(--danger);
-        }
-
-        .btn-calcular-danger:hover {
-            background: #742424;
-            box-shadow: 0 8px 20px rgba(155, 44, 44, 0.25);
-        }
-
-        .btn-limpar {
-            background: var(--gray-200);
-            color: var(--gray-800);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.8rem;
-            margin-top: 6px;
-        }
-
-        .btn-limpar:hover {
-            background: #cbd5e0;
-        }
-
-        /* RESULTADOS */
-        .result-box {
-            background: var(--gray-50);
-            border-radius: 12px;
-            padding: 16px 18px;
-            margin-top: 16px;
-            border-left: 5px solid var(--primary-light);
-            transition: var(--transition);
-        }
-
-        .result-box .linha {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--gray-200);
-            font-size: 0.9rem;
-            align-items: center;
-        }
-
-        .result-box .linha:last-child {
-            border-bottom: none;
-        }
-
-        .result-box .valor {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .valor-verde {
-            color: var(--secondary);
-        }
-        .valor-vermelho {
-            color: var(--danger);
-        }
-        .valor-destaque {
-            color: var(--primary-light);
-            font-size: 1.2rem;
-        }
-        .valor-ouro {
-            color: #d69e2e;
-        }
-
-        .legenda {
-            margin-top: 12px;
-            font-size: 0.78rem;
-            color: var(--gray-600);
-            background: var(--gray-100);
-            padding: 10px 14px;
-            border-radius: 10px;
-            line-height: 1.6;
-        }
-
-        .legenda strong {
-            color: var(--gray-800);
-        }
-
-        .legenda .destaque {
-            background: var(--warning);
-            padding: 1px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .info-box {
-            background: #ebf4ff;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid #bee3f8;
-            font-size: 0.85rem;
-            margin-bottom: 14px;
-        }
-
-        .info-box strong {
-            color: #2a4365;
-        }
-
-        .dica-especial {
-            background: #fffbeb;
-            border-left: 5px solid var(--warning);
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin: 10px 0;
-            font-size: 0.85rem;
-        }
-
-        /* TABELA LEGIS */
-        .tabela-legis {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
-            margin: 10px 0;
-        }
-
-        .tabela-legis th {
-            background: var(--primary-light);
-            color: #fff;
-            padding: 10px 12px;
-            text-align: left;
-        }
-
-        .tabela-legis td {
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .tabela-legis tr:nth-child(even) {
-            background: var(--gray-50);
-        }
-
-        .tabela-legis .destaque-linha {
-            background: #fefcbf;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
-
-        .badge-verde {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        .badge-vermelho {
-            background: #fed7d7;
-            color: #9b2c2c;
-        }
-        .badge-azul {
-            background: #bee3f8;
-            color: #2a4365;
-        }
-        .badge-amarelo {
-            background: #fefcbf;
-            color: #744210;
-        }
-
-        /* GRÁFICOS */
-        .chart-container {
-            background: #fff;
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        body.dark-mode .chart-container {
-            background: #2d3748;
-        }
-
-        .chart-container h3 {
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-
-        .chart-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        @media (max-width: 768px) {
-            .chart-wrapper {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* HISTÓRICO */
-        .historico-list {
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 0.85rem;
-        }
-
-        .historico-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 10px;
-            border-bottom: 1px solid var(--gray-200);
-            font-size: 0.8rem;
-        }
-
-        .historico-item .data {
-            color: var(--gray-600);
-        }
-
-        /* SEPARADOR */
-        .separador {
-            margin: 30px 0 20px 0;
-            border: 0;
-            height: 2px;
-            background: linear-gradient(to right, var(--gray-200), transparent);
-        }
-
-        .icon {
-            font-size: 1.2rem;
-        }
-
-        /* TOAST */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--primary-light);
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.4s ease;
-            z-index: 999;
-            font-weight: 500;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* FOOTER */
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--gray-600);
-            border-top: 1px solid var(--gray-200);
-            padding-top: 25px;
-        }
-
-        .footer a {
-            color: var(--primary-light);
-            text-decoration: none;
-        }
-
-        /* TOGGLE SWITCH */
         .switch {
             position: relative;
             display: inline-block;
-            width: 48px;
-            height: 26px;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
         }
 
         .switch input {
@@ -645,14 +270,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 20px;
-            width: 20px;
+            height: 18px;
+            width: 18px;
             left: 3px;
             bottom: 3px;
             background: #fff;
             transition: 0.3s;
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .switch input:checked+.slider {
@@ -660,8 +285,1001 @@
         }
 
         .switch input:checked+.slider:before {
-            transform: translateX(22px);
+            transform: translateX(20px);
             content: "🌙";
+        }
+
+        /* ============================================================
+                   GRIDS RESPONSIVOS
+                   ============================================================ */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        /* ============================================================
+                   CARDS
+                   ============================================================ */
+        .card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--gray-200);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            border-color: #b0c4de;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-bottom: 3px solid var(--gray-200);
+            padding-bottom: 10px;
+        }
+
+        .card h2 .tag {
+            font-size: clamp(0.5rem, 0.8vw, 0.6rem);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .tag-ecd {
+            background: var(--secondary);
+        }
+        .tag-presumido {
+            background: var(--primary-light);
+        }
+        .tag-real {
+            background: var(--danger);
+        }
+        .tag-especial {
+            background: #d69e2e;
+        }
+
+        /* ============================================================
+                   CAMPOS DE FORMULÁRIO
+                   ============================================================ */
+        .campo {
+            margin-bottom: 12px;
+        }
+
+        .campo label {
+            display: block;
+            font-weight: 500;
+            font-size: clamp(0.7rem, 1.2vw, 0.82rem);
+            color: var(--gray-800);
+            margin-bottom: 3px;
+        }
+
+        .campo .dica {
+            font-size: clamp(0.6rem, 0.9vw, 0.7rem);
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .campo input,
+        .campo select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #d2dce8;
+            border-radius: 10px;
+            font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+            background: var(--gray-50);
+            transition: var(--transition);
+            font-weight: 500;
+            -webkit-appearance: none;
+            appearance: none;
+            touch-action: manipulation;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            border-color: var(--primary-light);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 74, 111, 0.12);
+        }
+
+        .campo input[readonly] {
+            background: var(--gray-100);
+            color: var(--gray-800);
+            font-weight: 600;
+            cursor: default;
+        }
+
+        /* Campos de data - melhorados para mobile */
+        .campo input[type="date"] {
+            min-height: 44px;
+            /* Touch target */;
+        }
+
+        .campo input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .campo input[type="number"]::-webkit-inner-spin-button,
+        .campo input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* ============================================================
+                   BOTÕES
+                   ============================================================ */
+        .btn-calcular {
+            background: var(--primary-light);
+            color: #fff;
+            border: none;
+            padding: 14px 20px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: clamp(0.9rem, 1.2vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+            touch-action: manipulation;
+            min-height: 48px;
+            /* Touch target */;
+        }
+
+        .btn-calcular:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 74, 111, 0.25);
+        }
+
+        .btn-calcular:active {
+            transform: scale(0.97);
+        }
+
+        .btn-calcular-danger {
+            background: var(--danger);
+        }
+
+        .btn-calcular-danger:hover {
+            background: #742424;
+            box-shadow: 0 8px 20px rgba(155, 44, 44, 0.25);
+        }
+
+        .btn-limpar {
+            background: var(--gray-200);
+            color: var(--gray-800);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: clamp(0.7rem, 1vw, 0.8rem);
+            margin-top: 6px;
+            touch-action: manipulation;
+            min-height: 36px;
+        }
+
+        .btn-limpar:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-limpar:active {
+            transform: scale(0.95);
+        }
+
+        /* ============================================================
+                   RESULTADOS
+                   ============================================================ */
+        .result-box {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 14px;
+            border-left: 5px solid var(--primary-light);
+            transition: var(--transition);
+        }
+
+        .result-box .linha {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: clamp(0.78rem, 1.1vw, 0.9rem);
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-box .linha:last-child {
+            border-bottom: none;
+        }
+
+        .result-box .valor {
+            font-weight: 700;
+            font-size: clamp(0.85rem, 1.2vw, 1rem);
+            word-break: break-word;
+            text-align: right;
+        }
+
+        .valor-verde {
+            color: var(--secondary);
+        }
+        .valor-vermelho {
+            color: var(--danger);
+        }
+        .valor-destaque {
+            color: var(--primary-light);
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+        }
+        .valor-ouro {
+            color: #d69e2e;
+        }
+
+        .legenda {
+            margin-top: 10px;
+            font-size: clamp(0.65rem, 0.9vw, 0.78rem);
+            color: var(--gray-600);
+            background: var(--gray-100);
+            padding: 10px 12px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .legenda strong {
+            color: var(--gray-800);
+        }
+
+        .legenda .destaque {
+            background: var(--warning);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #ebf4ff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #bee3f8;
+            font-size: clamp(0.7rem, 1vw, 0.85rem);
+            margin-bottom: 12px;
+        }
+
+        .info-box strong {
+            color: #2a4365;
+        }
+
+        .dica-especial {
+            background: #fffbeb;
+            border-left: 5px solid var(--warning);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: clamp(0.7rem, 1vw, 0.85rem);
+        }
+
+        /* ============================================================
+                   TABELA LEGISLATIVA
+                   ============================================================ */
+        .tabela-legis {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+            margin: 10px 0;
+            overflow-x: auto;
+            display: block;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tabela-legis thead {
+            display: table-header-group;
+        }
+
+        .tabela-legis tbody {
+            display: table-row-group;
+        }
+
+        .tabela-legis tr {
+            display: table-row;
+        }
+
+        .tabela-legis th,
+        .tabela-legis td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+            white-space: nowrap;
+        }
+
+        .tabela-legis th {
+            background: var(--primary-light);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .tabela-legis tr:nth-child(even) {
+            background: var(--gray-50);
+        }
+
+        .tabela-legis .destaque-linha {
+            background: #fefcbf;
+        }
+
+        .tabela-legis td:last-child,
+        .tabela-legis th:last-child {
+            padding-right: 14px;
+        }
+
+        /* ============================================================
+                   BADGES
+                   ============================================================ */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: clamp(0.55rem, 0.7vw, 0.65rem);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-verde {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .badge-vermelho {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .badge-azul {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+        .badge-amarelo {
+            background: #fefcbf;
+            color: #744210;
+        }
+
+        /* ============================================================
+                   GRÁFICOS
+                   ============================================================ */
+        .chart-container {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            margin-top: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 12px;
+            font-size: clamp(1rem, 1.5vw, 1.1rem);
+        }
+
+        .chart-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-wrapper canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        .historico-list {
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .historico-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: clamp(0.65rem, 0.8vw, 0.8rem);
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .historico-item .data {
+            color: var(--gray-600);
+            font-size: clamp(0.55rem, 0.7vw, 0.7rem);
+        }
+
+        /* ============================================================
+                   SEPARADOR
+                   ============================================================ */
+        .separador {
+            margin: 24px 0 16px 0;
+            border: 0;
+            height: 2px;
+            background: linear-gradient(to right, var(--gray-200), transparent);
+        }
+
+        .icon {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+        }
+
+        /* ============================================================
+                   TOAST (notificações)
+                   ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-light);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            z-index: 999;
+            font-weight: 500;
+            font-size: clamp(0.8rem, 1vw, 0.95rem);
+            max-width: 90vw;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ============================================================
+                   FOOTER
+                   ============================================================ */
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            font-size: clamp(0.65rem, 0.8vw, 0.8rem);
+            color: var(--gray-600);
+            border-top: 1px solid var(--gray-200);
+            padding-top: 20px;
+            padding-bottom: 10px;
+        }
+
+        .footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+
+        /* ============================================================
+                   RESPONSIVIDADE - BREAKPOINTS DETALHADOS
+                   ============================================================ */
+
+        /* --- SMARTPHONES PEQUENOS (até 380px) --- */
+        @media (max-width: 380px) {
+            body {
+                padding: 8px;
+            }
+
+            .card {
+                padding: 14px 12px;
+            }
+
+            .header {
+                padding: 16px 14px;
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+            }
+
+            .btn-icon {
+                padding: 6px 10px;
+                font-size: 0.65rem;
+            }
+
+            .btn-icon .icon-text {
+                display: none;
+            }
+
+            .row-2,
+            .row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .campo input,
+            .campo select {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+
+            .result-box {
+                padding: 10px 12px;
+            }
+
+            .tabela-legis {
+                font-size: 0.6rem;
+            }
+
+            .tabela-legis th,
+            .tabela-legis td {
+                padding: 4px 6px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        /* --- SMARTPHONES (381px a 480px) --- */
+        @media (min-width: 381px) and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 16px 14px;
+            }
+
+            .header {
+                padding: 18px 16px;
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+            }
+
+            .btn-icon .icon-text {
+                display: none;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .row-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .campo input,
+            .campo select {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+
+            .tabela-legis {
+                font-size: 0.65rem;
+            }
+
+            .tabela-legis th,
+            .tabela-legis td {
+                padding: 6px 8px;
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+
+        /* --- TABLETS E SMARTPHONES GRANDES (481px a 768px) --- */
+        @media (min-width: 481px) and (max-width: 768px) {
+            body {
+                padding: 14px;
+            }
+
+            .card {
+                padding: 18px 18px;
+            }
+
+            .header {
+                padding: 20px 20px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .row-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .btn-icon .icon-text {
+                display: inline;
+            }
+
+            .tabela-legis {
+                font-size: 0.7rem;
+            }
+
+            .tabela-legis th,
+            .tabela-legis td {
+                padding: 6px 8px;
+                white-space: normal;
+            }
+        }
+
+        /* --- TABLETS GRANDES E NOTEBOOKS (769px a 1024px) --- */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            body {
+                padding: 18px 24px;
+            }
+
+            .card {
+                padding: 22px 24px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .row-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .btn-icon .icon-text {
+                display: inline;
+            }
+        }
+
+        /* --- DESKTOPS (1025px a 1440px) --- */
+        @media (min-width: 1025px) and (max-width: 1440px) {
+            body {
+                padding: 24px 32px;
+            }
+
+            .card {
+                padding: 24px 28px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn-icon .icon-text {
+                display: inline;
+            }
+        }
+
+        /* --- TELAS GRANDES (1441px+) --- */
+        @media (min-width: 1441px) {
+            body {
+                padding: 32px 48px;
+            }
+
+            .container {
+                max-width: 1600px;
+            }
+
+            .card {
+                padding: 30px 36px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 24px;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+
+            .btn-icon .icon-text {
+                display: inline;
+            }
+
+            .header {
+                padding: 32px 40px;
+            }
+
+            .header-left h1 {
+                font-size: 2.4rem;
+            }
+        }
+
+        /* ============================================================
+                   ORIENTAÇÃO PAISAGEM EM MOBILE
+                   ============================================================ */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .header {
+                flex-direction: row;
+                padding: 14px 18px;
+            }
+
+            .header-left h1 {
+                font-size: 1.2rem;
+            }
+
+            .card {
+                padding: 14px 16px;
+            }
+
+            .row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .row-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .chart-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .btn-icon .icon-text {
+                display: none;
+            }
+        }
+
+        /* ============================================================
+                   DISPOSITIVOS COM TOUCH (melhorias para iOS/Android)
+                   ============================================================ */
+        @media (hover: none) and (pointer: coarse) {
+            /* Dispositivos touch */
+            .btn-calcular:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .btn-icon:hover {
+                transform: none;
+            }
+
+            .card:hover {
+                border-color: var(--gray-200);
+                box-shadow: var(--shadow);
+            }
+
+            /* Aumenta área de toque em mobile */
+            .campo input,
+            .campo select,
+            .btn-calcular,
+            .btn-icon,
+            .btn-limpar {
+                min-height: 44px;
+            }
+
+            .switch {
+                width: 50px;
+                height: 28px;
+            }
+
+            .slider:before {
+                height: 20px;
+                width: 20px;
+            }
+        }
+
+        /* ============================================================
+                   IMPRESSÃO (PDF)
+                   ============================================================ */
+        @media print {
+            body {
+                background: #fff !important;
+                padding: 10px !important;
+                color: #000 !important;
+            }
+
+            .header {
+                background: #1a4a6f !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+            }
+
+            .btn-calcular,
+            .btn-limpar,
+            .btn-icon,
+            .switch-wrapper,
+            .header-actions .btn-icon {
+                display: none !important;
+            }
+
+            .result-box {
+                background: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-legis th {
+                background: #1a4a6f !important;
+                color: #fff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .tabela-legis .destaque-linha {
+                background: #fefcbf !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .badge-legal {
+                background: #ecc94b !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .chart-container {
+                display: none !important;
+            }
+
+            .toast {
+                display: none !important;
+            }
+        }
+
+        /* ============================================================
+                   SCROLLBAR PERSONALIZADA
+                   ============================================================ */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+        }
+
+        /* ============================================================
+                   MELHORIAS PARA SAFARI (iOS)
+                   ============================================================ */
+        @supports (-webkit-touch-callout: none) {
+            /* Safari iOS */
+            .campo input,
+            .campo select {
+                font-size: 16px !important;
+                /* Previne zoom automático */;
+            }
+
+            .btn-calcular,
+            .btn-icon,
+            .btn-limpar {
+                font-size: 16px !important;
+            }
+        }
+
+        /* ============================================================
+                   MELHORIAS PARA FIREFOX
+                   ============================================================ */
+        @-moz-document url-prefix() {
+            .campo input,
+            .campo select {
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
@@ -669,33 +1287,38 @@
 
     <div class="container">
 
-        <!-- HEADER -->
+        <!-- ============================================================
+        HEADER
+        ============================================================ -->
         <div class="header">
-            <div>
+            <div class="header-left">
                 <h1>📊 Simulador de Multa SPED</h1>
-                <p>ECD e ECF · Lucro Presumido e Lucro Real · Base legal atualizada 2026</p>
-                <span class="badge-legal">📜 Base: Lei 8.218/91 · DL 1.598/77 · IN RFB 2.003/2021</span>
+                <p>ECD e ECF · Lucro Presumido e Lucro Real · Base legal 2026</p>
+                <span class="badge-legal">📜 Lei 8.218/91 · DL 1.598/77 · IN RFB 2.003/2021</span>
             </div>
             <div class="header-actions">
                 <button class="btn-icon" id="btnExportarPDF" title="Exportar como PDF">
-                    📄 PDF
+                    📄 <span class="icon-text">PDF</span>
                 </button>
                 <button class="btn-icon" id="btnExportarCSV" title="Exportar resultados como CSV">
-                    📊 CSV
+                    📊 <span class="icon-text">CSV</span>
                 </button>
                 <button class="btn-icon" id="btnLimparHistorico" title="Limpar histórico">
-                    🗑️ Histórico
+                    🗑️ <span class="icon-text">Histórico</span>
                 </button>
-                <label class="switch">
-                    <input type="checkbox" id="toggleDarkMode" />
-                    <span class="slider"></span>
-                </label>
+                <div class="switch-wrapper">
+                    <span>🌙</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggleDarkMode" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- SEÇÃO 1: ECD E ECF PRESUMIDO                                  -->
-        <!-- ============================================================ -->
+        <!-- ============================================================
+        SEÇÃO 1: ECD E ECF PRESUMIDO
+        ============================================================ -->
         <div class="grid-2">
 
             <!-- CARD ECD -->
@@ -739,11 +1362,11 @@
                     <div class="linha"><span>📅 Dias em atraso</span> <span id="ecdDias" class="valor">0</span></div>
                     <div class="linha"><span>📈 Multa cheia (0,02% x dias)</span> <span id="ecdMultaCheia" class="valor">R$ 0,00</span></div>
                     <div class="linha"><span>⛔ Limite aplicado (1%)</span> <span id="ecdLimite" class="valor">R$ 0,00</span></div>
-                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                    <div class="linha" style="font-size:clamp(0.95rem,1.3vw,1.05rem); font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
                         <span>✅ Valor a pagar (cheio)</span>
                         <span id="ecdValorPagar" class="valor valor-vermelho">R$ 0,00</span>
                     </div>
-                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                    <div class="linha" style="font-size:clamp(1rem,1.4vw,1.1rem); background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
                         <span>💰 Com desconto de 50%</span>
                         <span id="ecdValorDesconto" class="valor valor-verde">R$ 0,00</span>
                     </div>
@@ -797,11 +1420,11 @@
                     <div class="linha"><span>📅 Dias em atraso</span> <span id="ecfPresDias" class="valor">0</span></div>
                     <div class="linha"><span>📈 Multa cheia</span> <span id="ecfPresMultaCheia" class="valor">R$ 0,00</span></div>
                     <div class="linha"><span>⛔ Limite (1%)</span> <span id="ecfPresLimite" class="valor">R$ 0,00</span></div>
-                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                    <div class="linha" style="font-size:clamp(0.95rem,1.3vw,1.05rem); font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
                         <span>✅ Valor a pagar (cheio)</span>
                         <span id="ecfPresValorPagar" class="valor valor-vermelho">R$ 0,00</span>
                     </div>
-                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                    <div class="linha" style="font-size:clamp(1rem,1.4vw,1.1rem); background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
                         <span>💰 Com desconto de 50%</span>
                         <span id="ecfPresValorDesconto" class="valor valor-verde">R$ 0,00</span>
                     </div>
@@ -814,13 +1437,13 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- SEÇÃO 2: ECF – LUCRO REAL                                     -->
-        <!-- ============================================================ -->
+        <!-- ============================================================
+        SEÇÃO 2: ECF – LUCRO REAL
+        ============================================================ -->
         <hr class="separador" />
 
         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
-            <h2 style="font-size:1.6rem; font-weight:600;">🧾 ECF – Lucro Real</h2>
+            <h2 style="font-size:clamp(1.2rem,2.5vw,1.6rem); font-weight:600;">🧾 ECF – Lucro Real</h2>
             <span class="badge badge-vermelho">Regra diferente!</span>
             <span class="badge badge-azul">Base: Lucro Líquido</span>
         </div>
@@ -868,15 +1491,15 @@
                     <div class="linha"><span>📅 Meses em atraso</span> <span id="ecfRealMeses" class="valor">0</span></div>
                     <div class="linha"><span>📈 Multa cheia (0,25% x meses)</span> <span id="ecfRealMultaCheia" class="valor">R$ 0,00</span></div>
                     <div class="linha"><span>⛔ Limite (10% do Lucro)</span> <span id="ecfRealLimite" class="valor">R$ 0,00</span></div>
-                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                    <div class="linha" style="font-size:clamp(0.95rem,1.3vw,1.05rem); font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
                         <span>✅ Valor a pagar (cheio)</span>
                         <span id="ecfRealValorPagar" class="valor valor-vermelho">R$ 0,00</span>
                     </div>
-                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                    <div class="linha" style="font-size:clamp(1rem,1.4vw,1.1rem); background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
                         <span>💰 Com desconto de 50%</span>
                         <span id="ecfRealValorDesconto" class="valor valor-verde">R$ 0,00</span>
                     </div>
-                    <div class="linha" style="font-size:0.9rem; background:#ebf8ff; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                    <div class="linha" style="font-size:clamp(0.8rem,1vw,0.9rem); background:#ebf8ff; padding:6px 10px; border-radius:8px; margin-top:4px;">
                         <span>⏱️ Desconto de 90% (até 30 dias)</span>
                         <span id="ecfRealDesc90" class="valor valor-ouro">R$ 0,00</span>
                     </div>
@@ -927,11 +1550,11 @@
                     <div class="linha"><span>📊 Lucro base corrigido (Selic)</span> <span id="ecfPreLucroCorrigido" class="valor valor-destaque">R$ 0,00</span></div>
                     <div class="linha"><span>📅 Meses em atraso</span> <span id="ecfPreMeses" class="valor">0</span></div>
                     <div class="linha"><span>📈 Multa cheia</span> <span id="ecfPreMultaCheia" class="valor">R$ 0,00</span></div>
-                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                    <div class="linha" style="font-size:clamp(0.95rem,1.3vw,1.05rem); font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
                         <span>✅ Valor a pagar (cheio)</span>
                         <span id="ecfPreValorPagar" class="valor valor-vermelho">R$ 0,00</span>
                     </div>
-                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                    <div class="linha" style="font-size:clamp(1rem,1.4vw,1.1rem); background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
                         <span>💰 Com desconto de 50%</span>
                         <span id="ecfPreValorDesconto" class="valor valor-verde">R$ 0,00</span>
                     </div>
@@ -944,22 +1567,22 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- GRÁFICOS E HISTÓRICO                                          -->
-        <!-- ============================================================ -->
+        <!-- ============================================================
+        GRÁFICOS E HISTÓRICO
+        ============================================================ -->
         <hr class="separador" />
 
         <div class="chart-container">
             <h3>📊 Comparativo de Multas</h3>
             <div class="chart-wrapper">
-                <div>
+                <div style="min-height:200px;">
                     <canvas id="graficoMultas"></canvas>
                 </div>
                 <div>
-                    <h4 style="margin-bottom:10px; font-size:0.95rem;">📋 Histórico de Simulações</h4>
+                    <h4 style="margin-bottom:10px; font-size:clamp(0.85rem,1.2vw,0.95rem);">📋 Histórico de Simulações</h4>
                     <div id="historicoContainer" class="historico-list">
-                        <div style="color:var(--gray-600); text-align:center; padding:20px;">
-                            Nenhuma simulação registrada ainda. Clique em "Calcular" para adicionar.
+                        <div style="color:var(--gray-600); text-align:center; padding:20px; font-size:clamp(0.7rem,0.9vw,0.85rem);">
+                            Nenhuma simulação registrada ainda.
                         </div>
                     </div>
                     <button class="btn-limpar" id="btnLimparHistoricoBtn" style="margin-top:10px;">🗑️ Limpar histórico</button>
@@ -967,58 +1590,60 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- TABELA RESUMO LEGISLATIVA                                     -->
-        <!-- ============================================================ -->
-        <div class="card" style="margin-top:25px;">
+        <!-- ============================================================
+        TABELA RESUMO LEGISLATIVA
+        ============================================================ -->
+        <div class="card" style="margin-top:20px;">
             <h2 style="border-bottom: none; padding-bottom: 0;">📚 Resumo da Base Legal</h2>
-            <table class="tabela-legis">
-                <thead>
-                    <tr>
-                        <th>Obrigação</th>
-                        <th>Regime</th>
-                        <th>Base de Cálculo</th>
-                        <th>Alíquota</th>
-                        <th>Limite</th>
-                        <th>Redução</th>
-                        <th>DARF</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>ECD</strong></td>
-                        <td>Todos</td>
-                        <td>Receita Bruta</td>
-                        <td>0,02% ao dia</td>
-                        <td>1% da Receita</td>
-                        <td>50%</td>
-                        <td>3527</td>
-                    </tr>
-                    <tr>
-                        <td><strong>ECF</strong></td>
-                        <td>Lucro Presumido</td>
-                        <td>Receita Bruta</td>
-                        <td>0,02% ao dia</td>
-                        <td>1% da Receita</td>
-                        <td>50%</td>
-                        <td>3624/2</td>
-                    </tr>
-                    <tr class="destaque-linha">
-                        <td><strong>ECF</strong></td>
-                        <td><strong>Lucro Real</strong></td>
-                        <td><strong>Lucro Líquido</strong></td>
-                        <td><strong>0,25% ao mês</strong></td>
-                        <td><strong>10% do Lucro</strong></td>
-                        <td>50% a 90%</td>
-                        <td>3624/3</td>
-                    </tr>
-                    <tr>
-                        <td colspan="7" style="font-size:0.75rem; color:var(--gray-600);">
-                            ⚠️ <strong>Lucro Real com prejuízo:</strong> utiliza o <strong>último lucro</strong> informado, corrigido pela <strong>Taxa Selic</strong>.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+                <table class="tabela-legis">
+                    <thead>
+                        <tr>
+                            <th>Obrigação</th>
+                            <th>Regime</th>
+                            <th>Base de Cálculo</th>
+                            <th>Alíquota</th>
+                            <th>Limite</th>
+                            <th>Redução</th>
+                            <th>DARF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ECD</strong></td>
+                            <td>Todos</td>
+                            <td>Receita Bruta</td>
+                            <td>0,02% ao dia</td>
+                            <td>1% da Receita</td>
+                            <td>50%</td>
+                            <td>3527</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ECF</strong></td>
+                            <td>Lucro Presumido</td>
+                            <td>Receita Bruta</td>
+                            <td>0,02% ao dia</td>
+                            <td>1% da Receita</td>
+                            <td>50%</td>
+                            <td>3624/2</td>
+                        </tr>
+                        <tr class="destaque-linha">
+                            <td><strong>ECF</strong></td>
+                            <td><strong>Lucro Real</strong></td>
+                            <td><strong>Lucro Líquido</strong></td>
+                            <td><strong>0,25% ao mês</strong></td>
+                            <td><strong>10% do Lucro</strong></td>
+                            <td>50% a 90%</td>
+                            <td>3624/3</td>
+                        </tr>
+                        <tr>
+                            <td colspan="7" style="font-size:clamp(0.6rem,0.75vw,0.75rem); color:var(--gray-600); white-space:normal;">
+                                ⚠️ <strong>Lucro Real com prejuízo:</strong> utiliza o <strong>último lucro</strong> informado, corrigido pela <strong>Taxa Selic</strong>.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- FOOTER -->
@@ -1036,9 +1661,9 @@
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
-    <!-- ============================================================ -->
-    <!-- SCRIPT JAVASCRIPT                                             -->
-    <!-- ============================================================ -->
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
     <script>
         // =============================================================
         // ESTADO GLOBAL
@@ -1104,11 +1729,12 @@
             const toast = document.getElementById('toast');
             toast.textContent = mensagem;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         // =============================================================
-        // GERENCIAMENTO DE HISTÓRICO
+        // HISTÓRICO
         // =============================================================
         function adicionarHistorico(tipo, valor, desconto) {
             const now = new Date();
@@ -1129,18 +1755,18 @@
             const container = document.getElementById('historicoContainer');
             if (estado.historico.length === 0) {
                 container.innerHTML =
-                    `<div style="color:var(--gray-600); text-align:center; padding:20px;">Nenhuma simulação registrada ainda.</div>`;
+                    `<div style="color:var(--gray-600); text-align:center; padding:20px; font-size:clamp(0.7rem,0.9vw,0.85rem);">Nenhuma simulação registrada ainda.</div>`;
                 return;
             }
             let html = '';
             estado.historico.forEach(item => {
                 html += `
-                    <div class="historico-item">
-                        <span><strong>${item.tipo}</strong></span>
-                        <span>${formatarMoeda(item.valor)} <span style="color:var(--gray-600);">→ com desc.</span> ${formatarMoeda(item.desconto)}</span>
-                        <span class="data">${item.data}</span>
-                    </div>
-                `;
+                            <div class="historico-item">
+                                <span><strong>${item.tipo}</strong></span>
+                                <span>${formatarMoeda(item.valor)} <span style="color:var(--gray-600);">→</span> ${formatarMoeda(item.desconto)}</span>
+                                <span class="data">${item.data}</span>
+                            </div>
+                        `;
             });
             container.innerHTML = html;
         }
@@ -1158,41 +1784,45 @@
         function atualizarGrafico() {
             const ctx = document.getElementById('graficoMultas').getContext('2d');
 
+            // Verifica se o canvas existe e está visível
+            const canvas = document.getElementById('graficoMultas');
+            if (!canvas) return;
+
             const labels = estado.historico.map((_, i) => `#${estado.historico.length - i}`);
             const dadosCheios = estado.historico.map(item => item.valor);
             const dadosDescontos = estado.historico.map(item => item.desconto);
-            const cores = estado.historico.map(() => {
-                const coresDisponiveis = ['#2b6c9e', '#2d6a4f', '#9b2c2c', '#d69e2e', '#6b46c1', '#c53030'];
-                return coresDisponiveis[Math.floor(Math.random() * coresDisponiveis.length)];
-            });
 
             if (estado.grafico) {
                 estado.grafico.destroy();
             }
 
+            const temDados = estado.historico.length > 0;
+
             estado.grafico = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels.length > 0 ? labels : ['Sem dados'],
+                    labels: temDados ? labels : ['Sem dados'],
                     datasets: [{
                         label: 'Valor cheio',
-                        data: dadosCheios.length > 0 ? dadosCheios : [0],
+                        data: temDados ? dadosCheios : [0],
                         backgroundColor: '#e53e3e',
                         borderRadius: 4,
                     }, {
                         label: 'Com desconto',
-                        data: dadosDescontos.length > 0 ? dadosDescontos : [0],
+                        data: temDados ? dadosDescontos : [0],
                         backgroundColor: '#38a169',
                         borderRadius: 4,
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     plugins: {
                         legend: {
                             position: 'top',
                             labels: {
-                                font: { size: 11 }
+                                font: { size: window.innerWidth < 480 ? 9 : 11 },
+                                boxWidth: window.innerWidth < 480 ? 10 : 15
                             }
                         }
                     },
@@ -1202,7 +1832,15 @@
                             ticks: {
                                 callback: function(value) {
                                     return 'R$ ' + value.toLocaleString('pt-BR');
-                                }
+                                },
+                                font: { size: window.innerWidth < 480 ? 8 : 10 }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: window.innerWidth < 480 ? 8 : 10 },
+                                maxRotation: 45,
+                                minRotation: 0
                             }
                         }
                     }
@@ -1328,9 +1966,16 @@
         // =============================================================
         document.getElementById('btnExportarPDF').addEventListener('click', function() {
             mostrarToast('📄 Gerando PDF...');
-            html2canvas(document.querySelector('.container'), {
+            const elemento = document.querySelector('.container');
+            html2canvas(elemento, {
                 scale: 2,
-                backgroundColor: document.body.classList.contains('dark-mode') ? '#1a202c' : '#ffffff'
+                backgroundColor: document.body.classList.contains('dark-mode') ? '#1a202c' : '#ffffff',
+                useCORS: true,
+                logging: false,
+                width: elemento.scrollWidth,
+                height: elemento.scrollHeight,
+                windowWidth: elemento.scrollWidth,
+                windowHeight: elemento.scrollHeight,
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'simulador-multa-sped.pdf';
@@ -1375,10 +2020,12 @@
         // =============================================================
         document.getElementById('toggleDarkMode').addEventListener('change', function() {
             document.body.classList.toggle('dark-mode', this.checked);
+            // Redesenha o gráfico para ajustar cores
+            setTimeout(atualizarGrafico, 100);
         });
 
         // =============================================================
-        // 9. ATUALIZAÇÃO AUTOMÁTICA (ao mudar datas/valores)
+        // 9. ATUALIZAÇÃO AUTOMÁTICA
         // =============================================================
         document.querySelectorAll('#ecdReceita, #ecdDataLimite, #ecdDataEfetiva').forEach(el => {
             el.addEventListener('change', calcularECD);
@@ -1402,19 +2049,61 @@
             });
 
         // =============================================================
-        // INICIALIZAÇÃO
+        // 10. REDIMENSIONAMENTO DA TELA - ATUALIZA GRÁFICO
+        // =============================================================
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (estado.grafico) {
+                    estado.grafico.resize();
+                }
+            }, 250);
+        });
+
+        // =============================================================
+        // 11. DETECÇÃO DE ORIENTAÇÃO (mobile)
+        // =============================================================
+        if (window.screen && window.screen.orientation) {
+            window.screen.orientation.addEventListener('change', function() {
+                setTimeout(atualizarGrafico, 500);
+            });
+        }
+
+        // =============================================================
+        // 12. INICIALIZAÇÃO
         // =============================================================
         window.addEventListener('load', function() {
             calcularECD();
             calcularECFPres();
             calcularECFReal();
             calcularECFPrejuizo();
-            atualizarGrafico();
+
+            // Pequeno delay para garantir que o canvas está renderizado
+            setTimeout(atualizarGrafico, 300);
+
+            // Verifica se é dispositivo mobile e ajusta
+            if (window.innerWidth < 768) {
+                document.querySelectorAll('.btn-icon .icon-text').forEach(el => {
+                    if (window.innerWidth < 480) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
             mostrarToast('🚀 Simulador carregado!');
+        });
+
+        // Detecta mudanças no tamanho da tela para mostrar/esconder textos dos botões
+        window.addEventListener('resize', function() {
+            const iconTexts = document.querySelectorAll('.btn-icon .icon-text');
+            if (window.innerWidth < 480) {
+                iconTexts.forEach(el => el.style.display = 'none');
+            } else {
+                iconTexts.forEach(el => el.style.display = 'inline');
+            }
         });
     </script>
 
 </body>
 </html>
-
-
