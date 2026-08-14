@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Multa SPED - ECD / ECF</title>
+
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <!-- html2canvas para exportar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0b2b4a;
+            --primary-light: #1a4a6f;
+            --secondary: #2d6a4f;
+            --danger: #9b2c2c;
+            --warning: #ecc94b;
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-600: #718096;
+            --gray-800: #2d3748;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --transition: 0.25s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f4f8;
+            color: #1a202c;
+            padding: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background: #1a202c;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .card {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode .card:hover {
+            border-color: #718096;
+        }
+
+        body.dark-mode .campo input,
+        body.dark-mode .campo select {
+            background: #4a5568;
+            border-color: #2d3748;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .campo input:focus {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+
+        body.dark-mode .result-box {
+            background: #2d3748;
+        }
+
+        body.dark-mode .legenda {
+            background: #4a5568;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .header {
+            background: linear-gradient(145deg, #1a202c, #2d3748);
+        }
+
+        body.dark-mode .btn-calcular {
+            background: #4a5568;
+        }
+
+        body.dark-mode .btn-calcular:hover {
+            background: #2d3748;
+        }
+
+        body.dark-mode .info-box {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+
+        body.dark-mode .tabela-legis th {
+            background: #2d3748;
+        }
+
+        body.dark-mode .tabela-legis tr:nth-child(even) {
+            background: #2d3748;
+        }
+
+        body.dark-mode .tabela-legis .destaque-linha {
+            background: #4a5568;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(145deg, var(--primary), var(--primary-light));
+            color: #fff;
+            padding: 30px 35px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .badge-legal {
+            display: inline-block;
+            background: var(--warning);
+            color: #1a202c;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        /* GRID */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .header {
+                padding: 20px;
+            }
+            .row-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* CARDS */
+        .card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            padding: 25px 28px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--gray-200);
+        }
+
+        .card:hover {
+            border-color: #b0c4de;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 3px solid var(--gray-200);
+            padding-bottom: 12px;
+        }
+
+        .card h2 .tag {
+            font-size: 0.6rem;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: #fff;
+        }
+
+        .tag-ecd {
+            background: var(--secondary);
+        }
+        .tag-presumido {
+            background: var(--primary-light);
+        }
+        .tag-real {
+            background: var(--danger);
+        }
+        .tag-especial {
+            background: #d69e2e;
+        }
+
+        /* CAMPOS */
+        .campo {
+            margin-bottom: 14px;
+        }
+
+        .campo label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.82rem;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .campo .dica {
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            font-weight: 400;
+        }
+
+        .campo input,
+        .campo select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #d2dce8;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: var(--gray-50);
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            border-color: var(--primary-light);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 74, 111, 0.12);
+        }
+
+        .campo input[readonly] {
+            background: var(--gray-100);
+            color: var(--gray-800);
+            font-weight: 600;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .row-2,
+            .row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* BOTÕES */
+        .btn-calcular {
+            background: var(--primary-light);
+            color: #fff;
+            border: none;
+            padding: 13px 20px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-calcular:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 74, 111, 0.25);
+        }
+
+        .btn-calcular-danger {
+            background: var(--danger);
+        }
+
+        .btn-calcular-danger:hover {
+            background: #742424;
+            box-shadow: 0 8px 20px rgba(155, 44, 44, 0.25);
+        }
+
+        .btn-limpar {
+            background: var(--gray-200);
+            color: var(--gray-800);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        .btn-limpar:hover {
+            background: #cbd5e0;
+        }
+
+        /* RESULTADOS */
+        .result-box {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-top: 16px;
+            border-left: 5px solid var(--primary-light);
+            transition: var(--transition);
+        }
+
+        .result-box .linha {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.9rem;
+            align-items: center;
+        }
+
+        .result-box .linha:last-child {
+            border-bottom: none;
+        }
+
+        .result-box .valor {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .valor-verde {
+            color: var(--secondary);
+        }
+        .valor-vermelho {
+            color: var(--danger);
+        }
+        .valor-destaque {
+            color: var(--primary-light);
+            font-size: 1.2rem;
+        }
+        .valor-ouro {
+            color: #d69e2e;
+        }
+
+        .legenda {
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: var(--gray-600);
+            background: var(--gray-100);
+            padding: 10px 14px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .legenda strong {
+            color: var(--gray-800);
+        }
+
+        .legenda .destaque {
+            background: var(--warning);
+            padding: 1px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #ebf4ff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #bee3f8;
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+        }
+
+        .info-box strong {
+            color: #2a4365;
+        }
+
+        .dica-especial {
+            background: #fffbeb;
+            border-left: 5px solid var(--warning);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+        }
+
+        /* TABELA LEGIS */
+        .tabela-legis {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin: 10px 0;
+        }
+
+        .tabela-legis th {
+            background: var(--primary-light);
+            color: #fff;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .tabela-legis td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .tabela-legis tr:nth-child(even) {
+            background: var(--gray-50);
+        }
+
+        .tabela-legis .destaque-linha {
+            background: #fefcbf;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .badge-verde {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .badge-vermelho {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .badge-azul {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+        .badge-amarelo {
+            background: #fefcbf;
+            color: #744210;
+        }
+
+        /* GRÁFICOS */
+        .chart-container {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        body.dark-mode .chart-container {
+            background: #2d3748;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .chart-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* HISTÓRICO */
+        .historico-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .historico-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.8rem;
+        }
+
+        .historico-item .data {
+            color: var(--gray-600);
+        }
+
+        /* SEPARADOR */
+        .separador {
+            margin: 30px 0 20px 0;
+            border: 0;
+            height: 2px;
+            background: linear-gradient(to right, var(--gray-200), transparent);
+        }
+
+        .icon {
+            font-size: 1.2rem;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-light);
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            z-index: 999;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* FOOTER */
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            border-top: 1px solid var(--gray-200);
+            padding-top: 25px;
+        }
+
+        .footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+
+        /* TOGGLE SWITCH */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "☀️";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            transition: 0.3s;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+
+        .switch input:checked+.slider {
+            background: #4a5568;
+        }
+
+        .switch input:checked+.slider:before {
+            transform: translateX(22px);
+            content: "🌙";
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>📊 Simulador de Multa SPED</h1>
+                <p>ECD e ECF · Lucro Presumido e Lucro Real · Base legal atualizada 2026</p>
+                <span class="badge-legal">📜 Base: Lei 8.218/91 · DL 1.598/77 · IN RFB 2.003/2021</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="btnExportarPDF" title="Exportar como PDF">
+                    📄 PDF
+                </button>
+                <button class="btn-icon" id="btnExportarCSV" title="Exportar resultados como CSV">
+                    📊 CSV
+                </button>
+                <button class="btn-icon" id="btnLimparHistorico" title="Limpar histórico">
+                    🗑️ Histórico
+                </button>
+                <label class="switch">
+                    <input type="checkbox" id="toggleDarkMode" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SEÇÃO 1: ECD E ECF PRESUMIDO                                  -->
+        <!-- ============================================================ -->
+        <div class="grid-2">
+
+            <!-- CARD ECD -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📁</span> ECD
+                    <span class="tag tag-ecd">Todos os regimes</span>
+                </h2>
+
+                <div class="campo">
+                    <label>Receita Bruta do período <span class="dica">(base de cálculo)</span></label>
+                    <input type="number" id="ecdReceita" value="100000" step="1000" />
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Data limite <span class="dica">(entrega)</span></label>
+                        <input type="date" id="ecdDataLimite" value="2026-06-30" />
+                    </div>
+                    <div class="campo">
+                        <label>Data efetiva <span class="dica">(transmissão)</span></label>
+                        <input type="date" id="ecdDataEfetiva" value="2026-08-13" />
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Alíquota</label>
+                        <input type="text" value="0,02% ao dia" readonly style="background:var(--gray-100);" />
+                    </div>
+                    <div class="campo">
+                        <label>Limite</label>
+                        <input type="text" value="1% da Receita" readonly style="background:var(--gray-100);" />
+                    </div>
+                </div>
+
+                <button class="btn-calcular" id="btnCalcularECD">▶ Calcular multa ECD</button>
+                <button class="btn-limpar" id="btnLimparECD">↺ Restaurar</button>
+
+                <div id="resultadoECD" class="result-box">
+                    <div class="linha"><span>📅 Dias em atraso</span> <span id="ecdDias" class="valor">0</span></div>
+                    <div class="linha"><span>📈 Multa cheia (0,02% x dias)</span> <span id="ecdMultaCheia" class="valor">R$ 0,00</span></div>
+                    <div class="linha"><span>⛔ Limite aplicado (1%)</span> <span id="ecdLimite" class="valor">R$ 0,00</span></div>
+                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                        <span>✅ Valor a pagar (cheio)</span>
+                        <span id="ecdValorPagar" class="valor valor-vermelho">R$ 0,00</span>
+                    </div>
+                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                        <span>💰 Com desconto de 50%</span>
+                        <span id="ecdValorDesconto" class="valor valor-verde">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="legenda">
+                    <strong>📌 Base legal:</strong> Art. 12, III da Lei 8.218/91 (0,02% por dia sobre a <strong>receita bruta</strong>).
+                    Redução de 50% se entregue antes de procedimento de ofício.
+                    <span class="destaque">Se receita = R$ 0 → multa = R$ 0</span>.
+                </div>
+            </div>
+
+            <!-- CARD ECF – LUCRO PRESUMIDO -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📊</span> ECF
+                    <span class="tag tag-presumido">Lucro Presumido</span>
+                </h2>
+
+                <div class="campo">
+                    <label>Receita Bruta do período <span class="dica">(base de cálculo)</span></label>
+                    <input type="number" id="ecfPresReceita" value="100000" step="1000" />
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Data limite</label>
+                        <input type="date" id="ecfPresDataLimite" value="2025-07-31" />
+                    </div>
+                    <div class="campo">
+                        <label>Data efetiva</label>
+                        <input type="date" id="ecfPresDataEfetiva" value="2026-01-31" />
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Alíquota</label>
+                        <input type="text" value="0,02% ao dia" readonly style="background:var(--gray-100);" />
+                    </div>
+                    <div class="campo">
+                        <label>Limite</label>
+                        <input type="text" value="1% da Receita" readonly style="background:var(--gray-100);" />
+                    </div>
+                </div>
+
+                <button class="btn-calcular" id="btnCalcularECFPres">▶ Calcular ECF (Presumido)</button>
+                <button class="btn-limpar" id="btnLimparECFPres">↺ Restaurar</button>
+
+                <div id="resultadoECFPres" class="result-box">
+                    <div class="linha"><span>📅 Dias em atraso</span> <span id="ecfPresDias" class="valor">0</span></div>
+                    <div class="linha"><span>📈 Multa cheia</span> <span id="ecfPresMultaCheia" class="valor">R$ 0,00</span></div>
+                    <div class="linha"><span>⛔ Limite (1%)</span> <span id="ecfPresLimite" class="valor">R$ 0,00</span></div>
+                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                        <span>✅ Valor a pagar (cheio)</span>
+                        <span id="ecfPresValorPagar" class="valor valor-vermelho">R$ 0,00</span>
+                    </div>
+                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                        <span>💰 Com desconto de 50%</span>
+                        <span id="ecfPresValorDesconto" class="valor valor-verde">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="legenda">
+                    <strong>📌 Base legal:</strong> Art. 12, III da Lei 8.218/91.
+                    Código DARF: <strong>3624/2</strong>.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SEÇÃO 2: ECF – LUCRO REAL                                     -->
+        <!-- ============================================================ -->
+        <hr class="separador" />
+
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+            <h2 style="font-size:1.6rem; font-weight:600;">🧾 ECF – Lucro Real</h2>
+            <span class="badge badge-vermelho">Regra diferente!</span>
+            <span class="badge badge-azul">Base: Lucro Líquido</span>
+        </div>
+
+        <div class="grid-2">
+
+            <!-- CARD ECF REAL – COM LUCRO -->
+            <div class="card">
+                <h2>
+                    <span class="icon">📈</span> Com Lucro no período
+                    <span class="tag tag-real">Real</span>
+                </h2>
+
+                <div class="campo">
+                    <label>Lucro Líquido antes do IRPJ/CSLL <span class="dica">(base de cálculo)</span></label>
+                    <input type="number" id="ecfRealLucro" value="100000" step="1000" />
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Data limite</label>
+                        <input type="date" id="ecfRealDataLimite" value="2024-07-31" />
+                    </div>
+                    <div class="campo">
+                        <label>Data efetiva</label>
+                        <input type="date" id="ecfRealDataEfetiva" value="2026-01-31" />
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Alíquota</label>
+                        <input type="text" value="0,25% ao mês" readonly style="background:var(--gray-100);" />
+                    </div>
+                    <div class="campo">
+                        <label>Limite</label>
+                        <input type="text" value="10% do Lucro" readonly style="background:var(--gray-100);" />
+                    </div>
+                </div>
+
+                <button class="btn-calcular" id="btnCalcularECFReal">▶ Calcular ECF (Lucro Real)</button>
+                <button class="btn-limpar" id="btnLimparECFReal">↺ Restaurar</button>
+
+                <div id="resultadoECFReal" class="result-box">
+                    <div class="linha"><span>📅 Meses em atraso</span> <span id="ecfRealMeses" class="valor">0</span></div>
+                    <div class="linha"><span>📈 Multa cheia (0,25% x meses)</span> <span id="ecfRealMultaCheia" class="valor">R$ 0,00</span></div>
+                    <div class="linha"><span>⛔ Limite (10% do Lucro)</span> <span id="ecfRealLimite" class="valor">R$ 0,00</span></div>
+                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                        <span>✅ Valor a pagar (cheio)</span>
+                        <span id="ecfRealValorPagar" class="valor valor-vermelho">R$ 0,00</span>
+                    </div>
+                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                        <span>💰 Com desconto de 50%</span>
+                        <span id="ecfRealValorDesconto" class="valor valor-verde">R$ 0,00</span>
+                    </div>
+                    <div class="linha" style="font-size:0.9rem; background:#ebf8ff; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                        <span>⏱️ Desconto de 90% (até 30 dias)</span>
+                        <span id="ecfRealDesc90" class="valor valor-ouro">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="legenda">
+                    <strong>📌 Base legal:</strong> Art. 8º-A do DL 1.598/77. Multa de <strong>0,25% ao mês</strong> sobre o <strong>Lucro Líquido</strong>.
+                    Código DARF: <strong>3624/3</strong>.
+                </div>
+            </div>
+
+            <!-- CARD ECF REAL – SEM LUCRO (PREJUÍZO) -->
+            <div class="card" style="border: 2px solid var(--warning);">
+                <h2>
+                    <span class="icon">⚠️</span> Sem lucro (Prejuízo)
+                    <span class="tag tag-especial">Regra especial</span>
+                </h2>
+
+                <div class="info-box">
+                    <strong>🔴 Atenção:</strong> Se a empresa teve <strong>prejuízo</strong> no período atual, a Receita Federal utiliza o
+                    <strong>último lucro informado</strong> (de anos anteriores) corrigido pela <strong>Taxa Selic</strong>.
+                </div>
+
+                <div class="campo">
+                    <label>Lucro do último período com lucro <span class="dica">(ex: R$ 10.000 em 2021)</span></label>
+                    <input type="number" id="ecfRealPrejuizoLucro" value="10000" step="1000" />
+                </div>
+
+                <div class="campo">
+                    <label>Taxa Selic acumulada (até o fim do período) <span class="dica">(ex: 0,15 = 15%)</span></label>
+                    <input type="number" id="ecfRealPrejuizoSelic" value="0.15" step="0.01" />
+                </div>
+
+                <div class="row-2">
+                    <div class="campo">
+                        <label>Data limite</label>
+                        <input type="date" id="ecfRealPreDataLimite" value="2024-07-31" />
+                    </div>
+                    <div class="campo">
+                        <label>Data efetiva</label>
+                        <input type="date" id="ecfRealPreDataEfetiva" value="2026-01-31" />
+                    </div>
+                </div>
+
+                <button class="btn-calcular btn-calcular-danger" id="btnCalcularECFPrejuizo">▶ Calcular com prejuízo</button>
+
+                <div id="resultadoECFPrejuizo" class="result-box">
+                    <div class="linha"><span>📊 Lucro base corrigido (Selic)</span> <span id="ecfPreLucroCorrigido" class="valor valor-destaque">R$ 0,00</span></div>
+                    <div class="linha"><span>📅 Meses em atraso</span> <span id="ecfPreMeses" class="valor">0</span></div>
+                    <div class="linha"><span>📈 Multa cheia</span> <span id="ecfPreMultaCheia" class="valor">R$ 0,00</span></div>
+                    <div class="linha" style="font-size:1.05rem; font-weight:700; border-bottom:2px solid var(--gray-200); padding-bottom:8px;">
+                        <span>✅ Valor a pagar (cheio)</span>
+                        <span id="ecfPreValorPagar" class="valor valor-vermelho">R$ 0,00</span>
+                    </div>
+                    <div class="linha" style="font-size:1.1rem; background:#e6fffa; padding:6px 10px; border-radius:8px; margin-top:4px;">
+                        <span>💰 Com desconto de 50%</span>
+                        <span id="ecfPreValorDesconto" class="valor valor-verde">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="legenda" style="background:#fffbeb; border:1px solid var(--warning);">
+                    <strong>📌 Base legal:</strong> § 4º do Art. 8º-A do DL 1.598/77.
+                    <span class="destaque">Mesmo com prejuízo, pode haver multa</span> com base em lucros passados + Selic.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- GRÁFICOS E HISTÓRICO                                          -->
+        <!-- ============================================================ -->
+        <hr class="separador" />
+
+        <div class="chart-container">
+            <h3>📊 Comparativo de Multas</h3>
+            <div class="chart-wrapper">
+                <div>
+                    <canvas id="graficoMultas"></canvas>
+                </div>
+                <div>
+                    <h4 style="margin-bottom:10px; font-size:0.95rem;">📋 Histórico de Simulações</h4>
+                    <div id="historicoContainer" class="historico-list">
+                        <div style="color:var(--gray-600); text-align:center; padding:20px;">
+                            Nenhuma simulação registrada ainda. Clique em "Calcular" para adicionar.
+                        </div>
+                    </div>
+                    <button class="btn-limpar" id="btnLimparHistoricoBtn" style="margin-top:10px;">🗑️ Limpar histórico</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TABELA RESUMO LEGISLATIVA                                     -->
+        <!-- ============================================================ -->
+        <div class="card" style="margin-top:25px;">
+            <h2 style="border-bottom: none; padding-bottom: 0;">📚 Resumo da Base Legal</h2>
+            <table class="tabela-legis">
+                <thead>
+                    <tr>
+                        <th>Obrigação</th>
+                        <th>Regime</th>
+                        <th>Base de Cálculo</th>
+                        <th>Alíquota</th>
+                        <th>Limite</th>
+                        <th>Redução</th>
+                        <th>DARF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ECD</strong></td>
+                        <td>Todos</td>
+                        <td>Receita Bruta</td>
+                        <td>0,02% ao dia</td>
+                        <td>1% da Receita</td>
+                        <td>50%</td>
+                        <td>3527</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ECF</strong></td>
+                        <td>Lucro Presumido</td>
+                        <td>Receita Bruta</td>
+                        <td>0,02% ao dia</td>
+                        <td>1% da Receita</td>
+                        <td>50%</td>
+                        <td>3624/2</td>
+                    </tr>
+                    <tr class="destaque-linha">
+                        <td><strong>ECF</strong></td>
+                        <td><strong>Lucro Real</strong></td>
+                        <td><strong>Lucro Líquido</strong></td>
+                        <td><strong>0,25% ao mês</strong></td>
+                        <td><strong>10% do Lucro</strong></td>
+                        <td>50% a 90%</td>
+                        <td>3624/3</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="font-size:0.75rem; color:var(--gray-600);">
+                            ⚠️ <strong>Lucro Real com prejuízo:</strong> utiliza o <strong>último lucro</strong> informado, corrigido pela <strong>Taxa Selic</strong>.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>
+                Simulador baseado na <strong>Lei 8.218/91</strong>, <strong>Decreto-Lei 1.598/77</strong> e
+                <strong>IN RFB 2.003/2021</strong> · Atualizado para 2026
+                <br />
+                <span style="opacity:0.6;">Este simulador tem caráter informativo. Consulte sempre a legislação vigente e um contador.</span>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT JAVASCRIPT                                             -->
+    <!-- ============================================================ -->
+    <script>
+        // =============================================================
+        // ESTADO GLOBAL
+        // =============================================================
+        const estado = {
+            historico: [],
+            grafico: null
+        };
+
+        // =============================================================
+        // FUNÇÕES AUXILIARES
+        // =============================================================
+        function calcularDias(dataLimite, dataEfetiva) {
+            if (!dataLimite || !dataEfetiva) return 0;
+            const d1 = new Date(dataLimite);
+            const d2 = new Date(dataEfetiva);
+            if (d2 <= d1) return 0;
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            return diff > 0 ? diff : 0;
+        }
+
+        function calcularMeses(dataLimite, dataEfetiva) {
+            if (!dataLimite || !dataEfetiva) return 0;
+            const d1 = new Date(dataLimite);
+            const d2 = new Date(dataEfetiva);
+            if (d2 <= d1) return 0;
+            let meses = (d2.getFullYear() - d1.getFullYear()) * 12;
+            meses += d2.getMonth() - d1.getMonth();
+            if (d2.getDate() > d1.getDate()) meses++;
+            return meses > 0 ? meses : 0;
+        }
+
+        function formatarMoeda(valor) {
+            return 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function calcularMultaBaseReceita(receita, dataLimite, dataEfetiva) {
+            const dias = calcularDias(dataLimite, dataEfetiva);
+            if (dias === 0 || receita <= 0) {
+                return { dias, multaCheia: 0, limite: 0, valorPagar: 0, valorDesconto: 0 };
+            }
+            const multaCheia = receita * 0.0002 * dias;
+            const limite = receita * 0.01;
+            const valorPagar = Math.min(multaCheia, limite);
+            const valorDesconto = valorPagar * 0.5;
+            return { dias, multaCheia, limite, valorPagar, valorDesconto };
+        }
+
+        function calcularMultaBaseLucro(lucro, dataLimite, dataEfetiva) {
+            const meses = calcularMeses(dataLimite, dataEfetiva);
+            if (meses === 0 || lucro <= 0) {
+                return { meses, multaCheia: 0, limite: 0, valorPagar: 0, valorDesconto: 0, desc90: 0 };
+            }
+            const multaCheia = lucro * 0.0025 * meses;
+            const limite = lucro * 0.10;
+            const valorPagar = Math.min(multaCheia, limite);
+            const valorDesconto = valorPagar * 0.5;
+            const desc90 = valorPagar * 0.10;
+            return { meses, multaCheia, limite, valorPagar, valorDesconto, desc90 };
+        }
+
+        function mostrarToast(mensagem) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensagem;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // =============================================================
+        // GERENCIAMENTO DE HISTÓRICO
+        // =============================================================
+        function adicionarHistorico(tipo, valor, desconto) {
+            const now = new Date();
+            const dataStr = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit',
+                minute: '2-digit' });
+            estado.historico.unshift({
+                tipo,
+                valor,
+                desconto,
+                data: dataStr
+            });
+            if (estado.historico.length > 50) estado.historico.pop();
+            renderizarHistorico();
+            atualizarGrafico();
+        }
+
+        function renderizarHistorico() {
+            const container = document.getElementById('historicoContainer');
+            if (estado.historico.length === 0) {
+                container.innerHTML =
+                    `<div style="color:var(--gray-600); text-align:center; padding:20px;">Nenhuma simulação registrada ainda.</div>`;
+                return;
+            }
+            let html = '';
+            estado.historico.forEach(item => {
+                html += `
+                    <div class="historico-item">
+                        <span><strong>${item.tipo}</strong></span>
+                        <span>${formatarMoeda(item.valor)} <span style="color:var(--gray-600);">→ com desc.</span> ${formatarMoeda(item.desconto)}</span>
+                        <span class="data">${item.data}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function limparHistorico() {
+            estado.historico = [];
+            renderizarHistorico();
+            atualizarGrafico();
+            mostrarToast('🗑️ Histórico limpo!');
+        }
+
+        // =============================================================
+        // GRÁFICO
+        // =============================================================
+        function atualizarGrafico() {
+            const ctx = document.getElementById('graficoMultas').getContext('2d');
+
+            const labels = estado.historico.map((_, i) => `#${estado.historico.length - i}`);
+            const dadosCheios = estado.historico.map(item => item.valor);
+            const dadosDescontos = estado.historico.map(item => item.desconto);
+            const cores = estado.historico.map(() => {
+                const coresDisponiveis = ['#2b6c9e', '#2d6a4f', '#9b2c2c', '#d69e2e', '#6b46c1', '#c53030'];
+                return coresDisponiveis[Math.floor(Math.random() * coresDisponiveis.length)];
+            });
+
+            if (estado.grafico) {
+                estado.grafico.destroy();
+            }
+
+            estado.grafico = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem dados'],
+                    datasets: [{
+                        label: 'Valor cheio',
+                        data: dadosCheios.length > 0 ? dadosCheios : [0],
+                        backgroundColor: '#e53e3e',
+                        borderRadius: 4,
+                    }, {
+                        label: 'Com desconto',
+                        data: dadosDescontos.length > 0 ? dadosDescontos : [0],
+                        backgroundColor: '#38a169',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // =============================================================
+        // 1. ECD
+        // =============================================================
+        function calcularECD() {
+            const receita = parseFloat(document.getElementById('ecdReceita').value) || 0;
+            const dataLimite = document.getElementById('ecdDataLimite').value;
+            const dataEfetiva = document.getElementById('ecdDataEfetiva').value;
+
+            const resultado = calcularMultaBaseReceita(receita, dataLimite, dataEfetiva);
+
+            document.getElementById('ecdDias').textContent = resultado.dias;
+            document.getElementById('ecdMultaCheia').textContent = formatarMoeda(resultado.multaCheia);
+            document.getElementById('ecdLimite').textContent = formatarMoeda(resultado.limite);
+            document.getElementById('ecdValorPagar').textContent = formatarMoeda(resultado.valorPagar);
+            document.getElementById('ecdValorDesconto').textContent = formatarMoeda(resultado.valorDesconto);
+
+            if (resultado.valorPagar > 0) {
+                adicionarHistorico('ECD', resultado.valorPagar, resultado.valorDesconto);
+            }
+        }
+
+        document.getElementById('btnCalcularECD').addEventListener('click', calcularECD);
+        document.getElementById('btnLimparECD').addEventListener('click', function() {
+            document.getElementById('ecdReceita').value = '100000';
+            document.getElementById('ecdDataLimite').value = '2026-06-30';
+            document.getElementById('ecdDataEfetiva').value = '2026-08-13';
+            calcularECD();
+        });
+
+        // =============================================================
+        // 2. ECF – Lucro Presumido
+        // =============================================================
+        function calcularECFPres() {
+            const receita = parseFloat(document.getElementById('ecfPresReceita').value) || 0;
+            const dataLimite = document.getElementById('ecfPresDataLimite').value;
+            const dataEfetiva = document.getElementById('ecfPresDataEfetiva').value;
+
+            const resultado = calcularMultaBaseReceita(receita, dataLimite, dataEfetiva);
+
+            document.getElementById('ecfPresDias').textContent = resultado.dias;
+            document.getElementById('ecfPresMultaCheia').textContent = formatarMoeda(resultado.multaCheia);
+            document.getElementById('ecfPresLimite').textContent = formatarMoeda(resultado.limite);
+            document.getElementById('ecfPresValorPagar').textContent = formatarMoeda(resultado.valorPagar);
+            document.getElementById('ecfPresValorDesconto').textContent = formatarMoeda(resultado.valorDesconto);
+
+            if (resultado.valorPagar > 0) {
+                adicionarHistorico('ECF Presumido', resultado.valorPagar, resultado.valorDesconto);
+            }
+        }
+
+        document.getElementById('btnCalcularECFPres').addEventListener('click', calcularECFPres);
+        document.getElementById('btnLimparECFPres').addEventListener('click', function() {
+            document.getElementById('ecfPresReceita').value = '100000';
+            document.getElementById('ecfPresDataLimite').value = '2025-07-31';
+            document.getElementById('ecfPresDataEfetiva').value = '2026-01-31';
+            calcularECFPres();
+        });
+
+        // =============================================================
+        // 3. ECF – Lucro Real (com lucro)
+        // =============================================================
+        function calcularECFReal() {
+            const lucro = parseFloat(document.getElementById('ecfRealLucro').value) || 0;
+            const dataLimite = document.getElementById('ecfRealDataLimite').value;
+            const dataEfetiva = document.getElementById('ecfRealDataEfetiva').value;
+
+            const resultado = calcularMultaBaseLucro(lucro, dataLimite, dataEfetiva);
+
+            document.getElementById('ecfRealMeses').textContent = resultado.meses;
+            document.getElementById('ecfRealMultaCheia').textContent = formatarMoeda(resultado.multaCheia);
+            document.getElementById('ecfRealLimite').textContent = formatarMoeda(resultado.limite);
+            document.getElementById('ecfRealValorPagar').textContent = formatarMoeda(resultado.valorPagar);
+            document.getElementById('ecfRealValorDesconto').textContent = formatarMoeda(resultado.valorDesconto);
+            document.getElementById('ecfRealDesc90').textContent = formatarMoeda(resultado.desc90 || 0);
+
+            if (resultado.valorPagar > 0) {
+                adicionarHistorico('ECF Real (c/ lucro)', resultado.valorPagar, resultado.valorDesconto);
+            }
+        }
+
+        document.getElementById('btnCalcularECFReal').addEventListener('click', calcularECFReal);
+        document.getElementById('btnLimparECFReal').addEventListener('click', function() {
+            document.getElementById('ecfRealLucro').value = '100000';
+            document.getElementById('ecfRealDataLimite').value = '2024-07-31';
+            document.getElementById('ecfRealDataEfetiva').value = '2026-01-31';
+            calcularECFReal();
+        });
+
+        // =============================================================
+        // 4. ECF – Lucro Real (com prejuízo)
+        // =============================================================
+        function calcularECFPrejuizo() {
+            const lucroBase = parseFloat(document.getElementById('ecfRealPrejuizoLucro').value) || 0;
+            const selic = parseFloat(document.getElementById('ecfRealPrejuizoSelic').value) || 0;
+            const dataLimite = document.getElementById('ecfRealPreDataLimite').value;
+            const dataEfetiva = document.getElementById('ecfRealPreDataEfetiva').value;
+
+            const lucroCorrigido = lucroBase * (1 + selic);
+            const resultado = calcularMultaBaseLucro(lucroCorrigido, dataLimite, dataEfetiva);
+
+            document.getElementById('ecfPreLucroCorrigido').textContent = formatarMoeda(lucroCorrigido);
+            document.getElementById('ecfPreMeses').textContent = resultado.meses;
+            document.getElementById('ecfPreMultaCheia').textContent = formatarMoeda(resultado.multaCheia);
+            document.getElementById('ecfPreValorPagar').textContent = formatarMoeda(resultado.valorPagar);
+            document.getElementById('ecfPreValorDesconto').textContent = formatarMoeda(resultado.valorDesconto);
+
+            if (resultado.valorPagar > 0) {
+                adicionarHistorico('ECF Real (prejuízo)', resultado.valorPagar, resultado.valorDesconto);
+            }
+        }
+
+        document.getElementById('btnCalcularECFPrejuizo').addEventListener('click', calcularECFPrejuizo);
+
+        // =============================================================
+        // 5. EXPORTAR PDF
+        // =============================================================
+        document.getElementById('btnExportarPDF').addEventListener('click', function() {
+            mostrarToast('📄 Gerando PDF...');
+            html2canvas(document.querySelector('.container'), {
+                scale: 2,
+                backgroundColor: document.body.classList.contains('dark-mode') ? '#1a202c' : '#ffffff'
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'simulador-multa-sped.pdf';
+                link.href = canvas.toDataURL('application/pdf');
+                link.click();
+                mostrarToast('✅ PDF baixado com sucesso!');
+            }).catch(() => {
+                mostrarToast('❌ Erro ao gerar PDF. Tente novamente.');
+            });
+        });
+
+        // =============================================================
+        // 6. EXPORTAR CSV
+        // =============================================================
+        document.getElementById('btnExportarCSV').addEventListener('click', function() {
+            if (estado.historico.length === 0) {
+                mostrarToast('📊 Nenhum dado para exportar.');
+                return;
+            }
+
+            let csv = 'Tipo,Valor Cheio,Valor com Desconto,Data\n';
+            estado.historico.forEach(item => {
+                csv += `${item.tipo},${item.valor.toFixed(2)},${item.desconto.toFixed(2)},${item.data}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'historico-multas-sped.csv';
+            link.click();
+            mostrarToast('✅ CSV baixado com sucesso!');
+        });
+
+        // =============================================================
+        // 7. LIMPAR HISTÓRICO
+        // =============================================================
+        document.getElementById('btnLimparHistorico').addEventListener('click', limparHistorico);
+        document.getElementById('btnLimparHistoricoBtn').addEventListener('click', limparHistorico);
+
+        // =============================================================
+        // 8. DARK MODE
+        // =============================================================
+        document.getElementById('toggleDarkMode').addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode', this.checked);
+        });
+
+        // =============================================================
+        // 9. ATUALIZAÇÃO AUTOMÁTICA (ao mudar datas/valores)
+        // =============================================================
+        document.querySelectorAll('#ecdReceita, #ecdDataLimite, #ecdDataEfetiva').forEach(el => {
+            el.addEventListener('change', calcularECD);
+            el.addEventListener('input', calcularECD);
+        });
+
+        document.querySelectorAll('#ecfPresReceita, #ecfPresDataLimite, #ecfPresDataEfetiva').forEach(el => {
+            el.addEventListener('change', calcularECFPres);
+            el.addEventListener('input', calcularECFPres);
+        });
+
+        document.querySelectorAll('#ecfRealLucro, #ecfRealDataLimite, #ecfRealDataEfetiva').forEach(el => {
+            el.addEventListener('change', calcularECFReal);
+            el.addEventListener('input', calcularECFReal);
+        });
+
+        document.querySelectorAll('#ecfRealPrejuizoLucro, #ecfRealPrejuizoSelic, #ecfRealPreDataLimite, #ecfRealPreDataEfetiva')
+            .forEach(el => {
+                el.addEventListener('change', calcularECFPrejuizo);
+                el.addEventListener('input', calcularECFPrejuizo);
+            });
+
+        // =============================================================
+        // INICIALIZAÇÃO
+        // =============================================================
+        window.addEventListener('load', function() {
+            calcularECD();
+            calcularECFPres();
+            calcularECFReal();
+            calcularECFPrejuizo();
+            atualizarGrafico();
+            mostrarToast('🚀 Simulador carregado!');
+        });
+    </script>
+
+</body>
+</html>
+
+
